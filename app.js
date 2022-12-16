@@ -13,8 +13,8 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-// mongoose.set('strictQuery', false);
-// mongoose.connect("mongodb://localhost:27017/secretsDB");
+mongoose.set('strictQuery', false);
+mongoose.connect("mongodb://localhost:27017/secretsDB");
 
 const loginSchema = new mongoose.Schema ({
     username:{
