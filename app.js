@@ -7,7 +7,10 @@ const ejs = require("ejs");
 const _ = require("lodash");
 const mongoose = require("mongoose");
 // const encrypt = require("mongoose-encryption")
-var md5 = require('md5');
+// var md5 = require('md5');
+
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 const app = express();
 
@@ -43,8 +46,8 @@ app.route("/login")
     })
     .post(function(req,res) {
         var username = req.body.username;
-        var password = md5(req.body.password);
-        
+        var password = (req.body.password);
+
         // User.findOne({$and: [{username:username},{password:password}]},function(err,result) {
         //     if(result === null) {
         //         res.send("error");
@@ -57,12 +60,14 @@ app.route("/login")
             if(err) {
                 console.log("error");
             } else {
-                if(result.password === password) {
-                    res.render("secrets.ejs");
-                }
-            }
 
-        })
+                bcrypt.compare(password, result.password).then(function(element) {
+                    if(element===true) {
+                        res.render("secrets.ejs");
+                    }
+                });
+            }
+        });
     });
 
 app.route("/register")
@@ -71,20 +76,24 @@ app.route("/register")
     })
     .post(function(req,res) {
         
-        const user = new User({
-            username : req.body.username,
-            password : md5(req.body.password)
+        bcrypt.hash(req.body.password, saltRounds).then(function(hash) {
+            
+            const user = new User({
+                username : req.body.username,
+                password : hash
+            });
+    
+            user.save(function(err) {
+                if(err) {
+                    console.log(err);
+                    res.send("error");
+                } else {
+                    console.log("success");
+                    res.render("secrets.ejs");
+                }
+            });
         });
 
-        user.save(function(err) {
-            if(err) {
-                console.log(err);
-                res.send("error");
-            } else {
-                console.log("success");
-                res.render("secrets.ejs");
-            }
-        });
     });
 
 
