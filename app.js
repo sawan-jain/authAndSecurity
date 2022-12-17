@@ -41,7 +41,8 @@ const loginSchema = new mongoose.Schema ({
         type:String,
         // required:[true,"not allowed"]
     },
-    googleId:String
+    googleId:String,
+    secret:String
 });
 
 loginSchema.plugin(passportLocalMongoose);
@@ -112,12 +113,37 @@ app.route("/login")
     });
 
 app.get("/secrets",function(req,res) {
-    if(req.isAuthenticated()) {
-        res.render("secrets.ejs");
-    } else {
-        res.redirect("/login");
-    }
-})
+    User.find({secret:{$ne: null}}, function(err,result) {
+        if(err) {
+            console.log(err);
+        } else if(result) {
+            res.render("secrets.ejs",{secret:result});
+        }
+    });
+});
+
+app.route("/submit")
+    .get(function(req,res) {
+        if(req.isAuthenticated()) {
+            res.render("submit.ejs");
+        } else {
+            res.redirect("/login");
+        }
+    })
+    .post(function(req,res) {
+        const secret = req.body.secret;
+        User.findById(req.user.id,function(err,result) {
+            if(err) {
+                console.log(err);
+            } else if(result) {
+                result.secret = secret;
+                result.save(function(){
+                    res.redirect("/secrets");
+                });
+            }
+        });
+    });
+
 
 app.route("/register")
     .get(function(req,res) {
